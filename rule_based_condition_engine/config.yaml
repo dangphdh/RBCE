@@ -1,0 +1,88 @@
+condition_table_path: /path/to/condition_table
+
+# Global configuration for logging and performance
+global_config:
+  logging:
+    level: INFO
+    file_path: /path/to/logs/rule_processor.log
+  performance:
+    max_memory_usage: 4GB
+    parallel_processing: true
+
+# Engine configuration
+engine:
+  default: polars  # Can be 'polars' or 'pyspark'
+  fallback: pyspark
+
+datasets:
+  customer_orders:
+    base_table: customers
+    tables:
+      - name: customers
+        path: /path/to/customers.parquet
+      - name: orders
+        path: /path/to/orders.parquet
+    joins:
+      - table: orders
+        conditions:
+          - customers.customer_id = orders.customer_id
+          - customers.status = 'active'
+        type: left
+
+scenarios:
+  - name: high_value_customers
+    dataset: customer_orders
+    output:
+      path: /path/to/output/high_value_customers
+      mode: overwrite
+      format: parquet
+      columns:
+        - customer_id
+        - customer_name
+        - total_order_value
+        - classification
+    rules:
+      - name: flag_high_value
+        rule_id: HV001
+        priority: 10  # Higher priority rules are applied first
+        condition: "(total_order_value > 10000 AND order_count > 5) OR (total_order_value > 50000)"
+        classification: "High Value Customer"
+        operators:
+          - type: range
+            column: total_order_value
+            min: 10000
+          - type: count
+            column: order_count
+            min: 5
+
+  - name: inactive_customers
+    dataset: customer_orders
+    output:
+      path: /path/to/output/inactive_customers
+      mode: overwrite
+      format: parquet
+      columns:
+        - customer_id
+        - customer_name
+        - last_order_date
+        - classification
+    rules:
+      - name: flag_inactive
+        rule_id: IC001
+        priority: 5
+        condition: "days_since_last_order > 365 AND order_count < 2"
+        classification: "Inactive Customer"
+        operators:
+          - type: range
+            column: days_since_last_order
+            min: 365
+          - type: count
+            column: order_count
+            max: 2
+
+# Conditions sources for dynamic rule generation
+conditions_sources:
+  customer_orders: /path/to/customer_orders_conditions
+
+rules_sources:
+  customer_orders: /path/to/customer_orders_rules

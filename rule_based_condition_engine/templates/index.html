@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rule-Based Condition Engine Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Rule-Based Condition Engine Manager</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('manage_datasets') }}">Datasets</a></li>
+                <li><a href="{{ url_for('manage_scenarios') }}">Scenarios</a></li>
+                <li><a href="{{ url_for('manage_rules') }}">Rules</a></li>
+                <li><a href="{{ url_for('manage_conditions') }}">Conditions</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h2>Welcome to the Rule-Based Condition Engine Manager</h2>
+        <p>Use the navigation menu above to manage your datasets, scenarios, rules, and conditions.</p>
+    </main>
+    <footer>
+        <p>&copy; 2023 Rule-Based Condition Engine</p>
+    </footer>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

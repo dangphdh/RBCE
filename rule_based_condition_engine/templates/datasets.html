@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Datasets - Rule-Based Condition Engine</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Manage Datasets</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('manage_scenarios') }}">Scenarios</a></li>
+                <li><a href="{{ url_for('manage_rules') }}">Rules</a></li>
+                <li><a href="{{ url_for('manage_conditions') }}">Conditions</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h2>Datasets</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Base Table</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dataset in datasets %}
+                <tr>
+                    <td>{{ dataset.name }}</td>
+                    <td>{{ dataset.base_table }}</td>
+                    <td>
+                        <button onclick="editDataset('{{ dataset.name }}')">Edit</button>
+                        <button onclick="deleteDataset('{{ dataset.name }}')">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button onclick="showAddDatasetForm()">Add New Dataset</button>
+        <div id="datasetForm" style="display: none;">
+            <h3>Add/Edit Dataset</h3>
+            <form id="datasetForm" onsubmit="saveDataset(event)">
+                <input type="text" id="datasetName" placeholder="Dataset Name" required>
+                <input type="text" id="baseTable" placeholder="Base Table" required>
+                <button type="submit">Save</button>
+                <button type="button" onclick="cancelDatasetForm()">Cancel</button>
+            </form>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2023 Rule-Based Condition Engine</p>
+    </footer>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

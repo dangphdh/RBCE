@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Rules - Rule-Based Condition Engine</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Manage Rules</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('manage_datasets') }}">Datasets</a></li>
+                <li><a href="{{ url_for('manage_scenarios') }}">Scenarios</a></li>
+                <li><a href="{{ url_for('manage_conditions') }}">Conditions</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h2>Rules</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Rule ID</th>
+                    <th>Name</th>
+                    <th>Scenario</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rule in rules %}
+                <tr>
+                    <td>{{ rule.rule_id }}</td>
+                    <td>{{ rule.name }}</td>
+                    <td>{{ rule.scenario }}</td>
+                    <td>
+                        <button onclick="editRule('{{ rule.rule_id }}')">Edit</button>
+                        <button onclick="deleteRule('{{ rule.rule_id }}')">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button onclick="showAddRuleForm()">Add New Rule</button>
+        <div id="ruleForm" style="display: none;">
+            <h3>Add/Edit Rule</h3>
+            <form id="ruleForm" onsubmit="saveRule(event)">
+                <input type="text" id="ruleId" placeholder="Rule ID" required>
+                <input type="text" id="ruleName" placeholder="Rule Name" required>
+                <select id="ruleScenario" required>
+                    {% for scenario in scenarios %}
+                    <option value="{{ scenario.name }}">{{ scenario.name }}</option>
+                    {% endfor %}
+                </select>
+                <textarea id="ruleOutputColumns" placeholder="Output Columns (comma-separated)" required></textarea>
+                <button type="submit">Save</button>
+                <button type="button" onclick="cancelRuleForm()">Cancel</button>
+            </form>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2023 Rule-Based Condition Engine</p>
+    </footer>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
