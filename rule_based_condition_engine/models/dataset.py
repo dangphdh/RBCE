@@ -1,6 +1,6 @@
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import col
-
+import polars as pl
 class DataSet:
     def __init__(self, spark=None):
         """
@@ -16,9 +16,12 @@ class DataSet:
         :param name: Name of the table.
         :param df: DataFrame (Polars or PySpark).
         """
+        # check if df is a DataFrame
+        if not isinstance(df, (DataFrame, pl.DataFrame)) :
+            df = spark.table(df)
         self.dataframes[name] = df
 
-    def join_tables(self, tables, table_aliases, join_conditions, join_type='inner'):
+    def join_tables_pyspark(self, tables, table_aliases, join_conditions, join_type='inner'):
         """
         Join multiple tables based on the provided join conditions.
         :param tables: List of table names.
@@ -68,6 +71,50 @@ class DataSet:
 
         return joined_df
 
+    def join_tables_sql(self, tables, table_aliases, join_conditions, join_type='inner'):
+        """
+        Join multiple tables using SQL syntax.
+        :param tables: List of table names.
+        :param table_aliases: List of table aliases.
+        :param join_conditions: List of lists of join conditions as [left_value, operator, right_value] (e.g., [["t1.id", "==", "t2.id"], ["t1.name", "==", "t2.name"]]).
+        :param join_type: Type of join (default is 'inner').
+        :return: Joined DataFrame.
+        """
+        if len(tables) < 2 or len(join_conditions) != len(tables) - 1:
+            raise ValueError("Number of tables must be at least 2, and number of join conditions must be equal to number of tables minus 1.")
+
+        # Register DataFrames as temporary views
+        for table, alias in zip(tables, table_aliases):
+            self.dataframes[table].createOrReplaceTempView(alias)
+
+        # Build the SQL query
+        sql_query = f"SELECT * FROM {table_aliases[0]}"
+        for i in range(1, len(tables)):
+            right_alias = table_aliases[i]
+            join_condition_list = join_conditions[i - 1]
+
+            # Convert join conditions to SQL syntax
+            join_condition_sql = " AND ".join([f"{left_value} {operator} {right_value}" for left_value, operator, right_value in join_condition_list])
+            sql_query += f" {join_type} JOIN {right_alias} ON {join_condition_sql}"
+
+        # Execute the SQL query
+        joined_df = self.spark.sql(sql_query)
+        return joined_df
+    
+    def join_tables(self, tables, table_aliases, join_conditions, join_type='inner', option = 'pyspark'):
+        """
+        Join multiple tables based on the provided join conditions.
+        :param tables: List of table names.
+        :param table_aliases: List of table aliases.
+        :param join_conditions: List of lists of join conditions as [left_value, operator, right_value] (e.g., [["t1.id", "==", "t2.id"], ["t1.name", "==", "t2.name"]]).
+        :param join_type: Type of join (default is 'inner').
+        :return: Joined DataFrame.
+        """
+        if option == 'pyspark':
+            return self.join_tables_pyspark(tables, table_aliases, join_conditions, join_type)
+        else:
+            return self.join_tables_sql(tables, table_aliases, join_conditions, join_type)
+
     def select_columns(self, df, columns_with_alias):
         """
         Select columns from the DataFrame with alias names.
@@ -96,6 +143,7 @@ class DataSet:
         join_type = config["join_type"]
         selected_columns = config["selected_columns"]
         columns_alias = config["columns_alias"]
+
 
         joined_df = self.join_tables(tables, table_aliases, join_conditions, join_type)
         final_df = self.select_columns(joined_df, columns_alias)
